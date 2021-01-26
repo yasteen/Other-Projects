@@ -1,0 +1,350 @@
+# Justin Chan
+# 24 Jan 2021
+# Determinant Calculator
+
+
+####### LOOSE CONVENTION: ########
+# call function with arguments rdi, rsi, rbx
+# callee can use rdi, rsi, rbx as scratch registers
+# callee must preserve rcx, rdx
+
+.pos 0x0000
+main:
+    irmovq stack_bottom, %rsp      # initialize stack
+    irmovq matrix_d, %rax
+    mrmovq (%rax), %rdi         # size
+    irmovq 8, %rsi
+    addq %rax, %rsi             # matrix pointer
+    call determinant            # determinant(size, matrix_pt)
+    halt
+
+
+
+
+
+.pos 0x100
+determinant:
+    pushq %rsi          ##### local matrix_pt
+    pushq %rdi          ##### local size
+    rrmovq %rdi, %rsi
+    call multiply               # %rax = size x size = length
+    irmovq 8, %rdi
+    pushq %rax          ##### local length
+    rrmovq %rax, %rsi
+    call multiply
+    mrmovq 16(%rsp), %rsi   ## rsi = matrix_pt
+    addq %rax, %rsi
+    irmovq 8, %rdi
+    subq %rdi, %rsi         # rsi = end of matrix
+    
+# Push matrix onto stack for calling det
+########## Set rbp to rsp
+    rrmovq %rsp, %rbp
+    mrmovq (%rsp), %rbx         # rbx = counter
+    det_push_loop:
+        andq %rbx, %rbx
+        jle calldet
+        mrmovq (%rsi), %rax
+        pushq %rax              # push matrix[i] as argument
+        irmovq 1, %rdi
+        subq %rdi, %rbx         # counter--
+        irmovq 8, %rdi
+        subq %rdi, %rsi         # move matrix pointer
+        jmp det_push_loop
+        
+calldet:
+    mrmovq 8(%rbp), %rdi
+    mrmovq (%rbp), %rsi
+    call det                    # det(size, length, matrix)
+    
+# Remove matrix from stack from calling det ############################# ERRRORRRRRORROROORR
+    mrmovq (%rbp), %rbx         # rbx = counter = length
+    irmovq 1, %rdi
+    det_pop_loop:
+        andq %rbx, %rbx
+        jle end_determinant
+        popq %rsi
+        subq %rdi, %rbx
+        jmp det_pop_loop
+
+end_determinant:
+    popq %rdi           ### rid locals
+    popq %rdi
+    popq %rdi
+    ret
+
+
+
+
+
+.pos 0x300
+det:                            # det(size, length, matrix) - matrix on stack
+# PRESERVE LENGTH rbp, and rdx
+    pushq %rdx          ##### local rdx
+    pushq %rbp          ##### local rbp
+    pushq %rsi          ##### local length
+    pushq %rdi          ##### local size
+# Deal with size <= 1
+    irmovq 0, %rax
+    andq %rdi, %rdi
+    jl end_det
+    irmovq -1, %rbx
+    addq %rdi, %rbx
+    mrmovq 40(%rsp), %rax       # offset to top matrix element
+    je end_det                  # if (size == 1) return matrix[0][0]
+    
+    irmovq 40, %rdx
+    addq %rsp, %rdx             # rdx = address of matrix in the stack
+    
+# Loop through top row
+    irmovq 0, %rax
+    pushq %rax          #### local answer = 0
+    pushq %rax          #### local counter = 0
+    pushq %rdx          #### local counter_addr = address
+    irmovq 1, %rax
+    pushq %rax          #### local sign = 1
+    det_loop:
+        mrmovq 16(%rsp), %rbx   # rbx = counter
+        mrmovq 32(%rsp), %rax
+        subq %rbx, %rax
+        jle end_dealloc_det     # if (counter >= size) return answer
+    
+    
+    #readying to call det recursively
+    # push new subarray: start at the end and go to the beginning.
+    # rbx: x, and rcx: y
+    ########## rbp is set to rsp here
+        rrmovq %rsp, %rbp
+        mrmovq 32(%rbp), %rcx
+        irmovq 1, %rax
+        subq %rax, %rcx             # y = size - 1
+        det_y_loop:
+            andq %rcx, %rcx
+            jle end_det_y               # if (y <= 0) goto end_det_y
+            mrmovq 32(%rbp), %rbx
+            irmovq 1, %rax
+            subq %rax, %rbx             # x = size - 1
+            det_x_loop:
+                andq %rbx, %rbx
+                jl end_det_x
+                mrmovq 16(%rbp), %rax
+                subq %rbx, %rax
+                je inc_det_x            # if (x == counter) skip entry
+                
+            # Readying to call get_entry
+            # No need to push rbx because get_entry preserves it.
+                mrmovq 32(%rbp), %rdi
+                rrmovq %rcx, %rsi
+                call get_entry
+                pushq %rax              # push matrix element
+            inc_det_x:
+                irmovq 1, %rax
+                subq %rax, %rbx
+                jmp det_x_loop
+            end_det_x:
+            irmovq 1, %rax
+            subq %rax, %rcx
+            jmp det_y_loop
+        end_det_y:
+        irmovq 1, %rax
+        mrmovq 32(%rbp), %rdi
+        mrmovq 40(%rbp), %rsi
+        subq %rdi, %rsi
+        subq %rdi, %rsi
+        addq %rax, %rsi                 # rsi = (size - 1) ^ 2
+        subq %rax, %rdi                 # rdi = size - 1
+        
+        call det
+        dealloc_child_loop:
+            andq %rsi, %rsi
+            jle end_dealloc_child
+            popq %rbx                   # pop matrix element
+            irmovq 1, %rbx
+            subq %rbx, %rsi
+            jmp dealloc_child_loop
+        end_dealloc_child:
+        mrmovq 8(%rsp), %rdi         # counter_addr
+        mrmovq (%rdi), %rdi          # first-row matrix element
+        rrmovq %rax, %rsi
+        call multiply
+        mrmovq (%rsp), %rdi
+        rrmovq %rax, %rsi
+        call multiply               # rax = sign * element * det_recursive
+        mrmovq 24(%rsp), %rdi
+        addq %rax, %rdi
+        rmmovq %rdi, 24(%rsp)       # answer += rax
+        irmovq 1, %rax
+        mrmovq 16(%rsp), %rdi
+        addq %rax, %rdi
+        rmmovq %rdi, 16(%rsp)       # counter++
+        irmovq 8, %rax
+        mrmovq 8(%rsp), %rdi
+        addq %rax, %rdi
+        rmmovq %rdi, 8(%rsp)        # counter_addr += 8
+        mrmovq (%rsp), %rdi
+        irmovq -1, %rsi
+        call multiply
+        rmmovq %rax, (%rsp)         # sign = -sign
+        jmp det_loop
+
+end_dealloc_det:
+    popq %rdi           ### rid locals
+    popq %rdi
+    popq %rdi
+    popq %rax           ## answer
+    
+end_det:
+    popq %rdi
+    popq %rsi           ## RESTORE length
+    popq %rbp           ## RESTORE rbp
+    popq %rdx           ## RESTORE rdx
+    ret
+
+
+
+
+
+.pos 0x800
+get_entry:                          # get_entry(address, size, y, x) - address rdx
+    call multiply
+    addq %rbx, %rax                 # rax = size * y + x
+    rrmovq %rax, %rdi
+    irmovq 8, %rsi
+    call multiply                   # rax = offset * 8
+    addq %rdx, %rax                 # rax = address + offset * 8
+    mrmovq (%rax), %rax             # rax = matrix[x][y]
+    ret
+
+
+
+
+
+.pos 0x1000
+multiply:
+# Ensure rdi <= rsi, and $rdi >= 0
+    andq %rdi, %rdi
+    jl negxxx
+        andq %rsi, %rsi
+        jl posneg
+        pospos:                 # Case 1
+            rrmovq %rsi, %rax
+            subq %rdi, %rax
+            jl swap
+            jmp mult
+        posneg:                 # Case 2
+            rrmovq %rsi, %rax
+            addq %rdi, %rax
+            jg swap
+            jmp mult
+    negxxx:
+    
+    xorq %rax, %rax
+    subq %rdi, %rax
+    rrmovq %rax, %rdi
+    xorq %rax, %rax
+    subq %rsi, %rax
+    rrmovq %rax, %rsi           # convert to posxxx
+        andq %rsi, %rsi
+        jl posneg               # Case 3
+        jmp pospos              # Case 4
+swap:
+    rrmovq %rsi, %rax
+    rrmovq %rdi, %rsi
+    rrmovq %rax, %rdi
+    andq %rdi, %rdi             # ensure rdi >= 0
+    jge mult
+    xorq %rax, %rax
+    subq %rdi, %rax
+    rrmovq %rax, %rdi
+    xorq %rax, %rax
+    subq %rsi, %rax
+    rrmovq %rax, %rsi           # convert to positive
+    
+mult:
+    pushq %rcx          ##### preserve rcx
+    pushq %rbx          ##### preserve rbx
+    irmovq 0, %rax
+    rrmovq %rdi, %rbx
+    irmovq 1, %rcx
+mult_loop:
+    andq %rbx, %rbx
+    jle mult_end
+    addq %rsi, %rax
+    subq %rcx, %rbx
+    jmp mult_loop
+mult_end:
+    popq %rbx           ### restore rbx
+    popq %rcx           ### restore rcx
+    ret
+
+
+
+########################### DATA ############################
+
+
+
+.pos 0x8000
+matrix_a:
+    .quad 1
+    
+    .quad 69
+
+
+matrix_b:
+    .quad 2
+    
+    .quad -1
+    .quad 2
+    
+    .quad 3
+    .quad -4
+
+
+matrix_c:
+    .quad 3     # Length n of an n x n matrix
+    
+    .quad -1
+    .quad 3
+    .quad 2
+    
+    .quad 0
+    .quad -5
+    .quad 4
+    
+    .quad -1
+    .quad 4
+    .quad 8
+
+
+matrix_d:
+    .quad 5     # Length n of an n x n matrix
+    
+    .quad 3
+    .quad 4
+    .quad 1
+    .quad -4
+    .quad -10
+    
+    .quad 3
+    .quad 4
+    .quad -1
+    .quad 0
+    .quad 4
+    
+    .quad 8
+    .quad -7
+    .quad 1
+    .quad -3
+    .quad 2
+    
+    .quad 4
+    .quad 5
+    .quad -10
+    .quad 0
+    .quad 4
+    
+    .quad 2
+    .quad -2
+    .quad 1
+    .quad 9
+    .quad 5

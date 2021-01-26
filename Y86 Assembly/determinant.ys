@@ -348,3 +348,6 @@ matrix_d:
     .quad 1
     .quad 9
     .quad 5
+
+.pos 0x18000
+stack_bottom:

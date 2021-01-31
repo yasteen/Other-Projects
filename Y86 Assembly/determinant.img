@@ -1,0 +1,397 @@
+v2.0 raw
+
+# Justin Chan
+# 26 Jan 2021
+# determinant.img for LOGISIM
+
+
+# start of main function		RESUMES AT LINE 75
+30 f4 00 00 1f f8	# Assigns stack pointer to a faraway address
+
+
+
+### DESCRIPTION ###
+
+	# This program calculates the determinant of a matrix. Matrices
+	# are stored after the code: at address 0x300 and after. After
+	# the computation, the final result is placed into register %eax.
+	
+	# This determinant calculator runs very inefficiently with a recursive formula:
+	# T(n) = n * T(n-1) + n^2
+	# The function calls itself recursively n times
+	# and takes O(n^2) time to push/pop the
+	# matrix entries on/off the stack.
+	
+	# Also, because there is no multiplication in
+	# this Y86 instruction set, so the multiply 
+	# function further increases the running time
+	# (Multiplying numbers a and b take O(min(a, b) time))
+	
+	
+	
+### SELECTING/MAKING MATRICES
+
+	# The following line can be altered to run the program on
+	# different matrices.
+
+		#--------------------------------#
+		#            vvvvvvvvvvv         # 
+		       30 f0 00 00 03 1c         #
+		#            ^^^^^^^^^^^         #
+		#--------------------------------#
+
+	# KEEP the 30 f0 instruction, and REPLACE the last
+	# four bytes with the new address of the matrix.
+	# You can define your own matrix at the end of the file
+
+
+
+### REFERENCE OF MATRICES ALREADY STORED ###
+
+	# matrix_a: 00 00 03 00		(Answer: 69     = 0x00000045)
+	# matrix_b: 00 00 03 08		(Answer: -2     = 0xFFFFFFFE)
+	# matrix_c: 00 00 03 1c		(Answer: 34     = 0x00000022)
+	# matrix_d: 00 00 03 44		(Answer: -56358	= 0xffff23da)
+	# your_own: 00 00 03 ac		(Answer:        =           )
+
+	
+### HOW TO RUN THIS PROGRAM ###
+
+	# 1. Open Y86-CPU.circ in Logisim, and select simpleram.jar
+	# 2. Load this image into the 16MB RAM Module
+	# 3. Select Simulate > Tick Frequency > 4.1 kHz
+	# Controls:
+	# CTRL + T to cycle one tick. Pressing four times (2 clock cycles) corresponds to running one instruction.
+	# CTRL + K to automatically tick. Press again to turn off.
+	
+	
+### RESULT OF CALCULATION ###
+
+	# After seeing that the instruction is iCd: 0 and iFn: 0, the result
+	# should be found in %eax on the right (coming out of the Registers module).
+
+
+
+# Rest of main function
+
+50 70 00 00 00 00
+30 f6 00 00 00 04
+60 06
+80 00 00 00 20		# call determinant
+00
+
+
+# determinant
+a0 68
+a0 78
+20 76
+80 00 00 02 38			# call multiply
+30 f7 00 00 00 04
+a0 08
+20 06
+80 00 00 02 38			# call multiply
+50 64 00 00 00 08
+60 06
+30 f7 00 00 00 04
+61 76
+20 45
+50 34 00 00 00 00
+	# det_push_loop
+62 33
+71 00 00 00 76			# jle calldet
+50 06 00 00 00 00
+a0 08
+30 f7 00 00 00 01
+61 73
+30 f7 00 00 00 04
+61 76
+70 00 00 00 52
+	# calldet
+50 75 00 00 00 04
+50 65 00 00 00 00
+80 00 00 00 aa			# call det
+50 35 00 00 00 00
+30 f7 00 00 00 01
+	# det_pop_loop
+62 33
+71 00 00 00 a3			# jle end_determinant
+b0 68
+61 73
+70 00 00 00 93			# jmp det_pop_loop
+	# end_determinant
+b0 78
+b0 78
+b0 78
+90
+
+
+# det
+a0 28
+a0 58
+a0 68
+a0 78
+30 f0 00 00 00 00
+62 77
+72 00 00 02 12			# jl end_det
+30 f3 ff ff ff ff
+60 73
+50 04 00 00 00 14
+73 00 00 02 12			# je end_det
+30 f2 00 00 00 14
+60 42
+30 f0 00 00 00 00
+a0 08
+a0 08
+a0 28
+30 f0 00 00 00 01
+a0 08
+	# det_loop
+50 34 00 00 00 08
+50 04 00 00 00 10
+61 30
+71 00 00 02 0a			# jle end_dealloc_det
+20 45
+50 15 00 00 00 10
+30 f0 00 00 00 01
+61 01
+	# det_y_loop
+62 11
+71 00 00 01 63
+50 35 00 00 00 10
+30 f0 00 00 00 01
+61 03
+	# det_x_loop
+62 33
+72 00 00 01 56			# jl end_det_x
+50 05 00 00 00 08
+61 30
+73 00 00 01 49			# je inc_det_x
+50 75 00 00 00 10
+20 16
+80 00 00 02 1b			# call get_entry
+a0 08
+	# inc_det_x
+30 f0 00 00 00 01
+61 03
+70 00 00 01 26			# jmp det_x_loop
+	# end_det_x
+30 f0 00 00 00 01
+61 01
+70 00 00 01 11			# jmp det_y_loop
+	# end_det_y
+30 f0 00 00 00 01
+50 75 00 00 00 10
+50 65 00 00 00 14
+61 76
+61 76
+60 06
+61 07
+80 00 00 00 aa			# call det (recursive)
+	# dealloc_child_loop
+62 66
+71 00 00 01 98			# jmp end_dealloc_child
+b0 38
+30 f3 00 00 00 01
+61 36
+70 00 00 01 82			# jmp dealloc_child_loop
+	# end_dealloc_child
+50 74 00 00 00 04
+50 77 00 00 00 00
+20 06
+80 00 00 02 38			# call multiply
+50 74 00 00 00 00
+20 06
+80 00 00 02 38			# call multiply
+50 74 00 00 00 0c
+60 07
+40 74 00 00 00 0c
+30 f0 00 00 00 01
+50 74 00 00 00 08
+60 07
+40 74 00 00 00 08
+30 f0 00 00 00 04
+50 74 00 00 00 04
+60 07
+40 74 00 00 00 04
+50 74 00 00 00 00
+30 f6 ff ff ff ff
+80 00 00 02 38			# call multiply
+40 04 00 00 00 00
+70 00 00 00 ee			# jmp det_loop
+	# end_dealloc_det
+b0 78
+b0 78
+b0 78
+b0 08
+	# end_det
+b0 78
+b0 68
+b0 58
+b0 28
+90
+
+
+
+
+
+# get_entry
+80 00 00 02 38			# call multiply
+60 30
+20 07
+30 f6 00 00 00 04
+80 00 00 02 38			# call multiply
+60 20
+50 00 00 00 00 00
+90
+
+
+
+
+
+# multiply
+62 77
+72 00 00 02 62			# jl negxxx
+62 66
+72 00 00 02 54			# jl posneg
+	# pospos
+20 60
+61 70
+72 00 00 02 7a			# jl swap
+70 00 00 02 93			# jmp mult
+	# posneg
+20 60
+60 70
+76 00 00 02 7a			# jg swap
+70 00 00 02 93			# jmp mult
+	# negxxx
+64 00
+61 70
+20 07
+64 00
+61 60
+20 06
+62 66
+72 00 00 02 54			# jl posneg
+70 00 00 02 46			# jmp pospos
+	# swap
+20 60
+20 76
+20 07
+62 77
+75 00 00 02 93			# jmp mult
+64 00
+61 70
+20 07
+64 00
+61 60
+20 06
+	# mult
+a0 18
+a0 38
+30 f0 00 00 00 00
+20 73
+30 f1 00 00 00 01
+	# mult_loop
+62 33
+71 00 00 02 b5			# jle mult_end
+60 60
+61 13
+70 00 00 02 a5			# jmp mult_loop
+	# mult_end
+b0 38
+b0 18
+90
+
+	00 00 00 00 00 00       # SOME PADDING
+	00 00 00 00 00 00 00 00
+	00 00 00 00 00 00 00 00
+	00 00 00 00 00 00 00 00
+	00 00 00 00 00 00 00 00
+	00 00 00 00 00 00 00 00
+	00 00 00 00 00 00 00 00
+	00 00 00 00 00 00 00 00
+	00 00 00 00 00 00 00 00
+	
+	################## DATA ##################
+
+# FORMAT OF A MATRIX:
+# First entry is the size
+# Then follow with size x size entries.
+
+	
+# matrix_a:				# ADDRESS: 00 00 03 00
+	00 00 00 01			# size
+
+	00 00 00 45
+
+
+# matrix_b:				# ADDRESS: 00 00 03 08
+	00 00 00 02			# size
+
+	ff ff ff ff
+	00 00 00 02
+
+	00 00 00 03
+	ff ff ff fc
+
+
+# matrix_c:				# ADDRESS: 00 00 03 1c
+	00 00 00 03			# size
+
+	ff ff ff ff
+	00 00 00 03
+	00 00 00 02
+
+	00 00 00 00
+	ff ff ff fb
+	00 00 00 04
+
+	ff ff ff ff
+	00 00 00 04
+	00 00 00 08
+
+	
+# matrix_d:				# ADDRESS: 00 00 03 44
+	00 00 00 05			# size
+
+	00 00 00 03
+	00 00 00 04
+	00 00 00 01
+	ff ff ff fc
+	ff ff ff f6
+
+	00 00 00 03
+	00 00 00 04
+	ff ff ff ff
+	00 00 00 00
+	00 00 00 04
+
+	00 00 00 08
+	ff ff ff f9
+	00 00 00 01
+	ff ff ff fd
+	00 00 00 02
+
+	00 00 00 04
+	00 00 00 05
+	ff ff ff f6
+	00 00 00 00
+	00 00 00 04
+
+	00 00 00 02
+	ff ff ff fe
+	00 00 00 01
+	00 00 00 09
+	00 00 00 05
+	
+	
+# Your own matrix:		# ADDRESS: 00 00 03 ac
+
+	# SIZE:
+
+	
+
+	# ENTRIES:
+
+	
+

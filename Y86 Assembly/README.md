@@ -9,4 +9,3 @@ for multiplying smaller numbers.
 
 This determinant calculator calls a recursive function "det", which loops through the top row of the n x n matrix and multiplies
 each entry with the corresponding (n-1) x (n-1) sub-matrix (alternating sign each time).
-The running time for det is rather complicated because it depends on the size of every entry in the matrix.

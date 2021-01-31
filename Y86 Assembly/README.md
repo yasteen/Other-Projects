@@ -8,4 +8,5 @@ is O(min(n, m)) for multiply(n, m). This can be done in logarithmic time, but it
 for multiplying smaller numbers.
 
 This determinant calculator calls a recursive function "det", which loops through the top row of the n x n matrix and multiplies
-each entry with the corresponding (n-1) x (n-1) sub-matrix (alternating sign each time).
+each entry with the determinant of the corresponding (n-1) x (n-1) sub-matrix (alternating sign each time).
+Running time is O(n!), assuming that the numbers are "relatively small" - not exactly the greatest...

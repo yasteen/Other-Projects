@@ -17,7 +17,7 @@ v2.0 raw
 	# the computation, the final result is placed into register %eax.
 	
 	# This determinant calculator runs very inefficiently with a recursive formula:
-	# T(n) = n * T(n-1) + n^2
+	# T(n) = n * T(n-1) + n^2:	resulting in O(n!) time if I did my math correctly.
 	# The function calls itself recursively n times
 	# and takes O(n^2) time to push/pop the
 	# matrix entries on/off the stack.
@@ -26,9 +26,8 @@ v2.0 raw
 	# this Y86 instruction set, so the multiply 
 	# function further increases the running time
 	# (Multiplying numbers a and b take O(min(a, b) time))
-	
-	
-	
+
+
 ### SELECTING/MAKING MATRICES
 
 	# The following line can be altered to run the program on
@@ -45,7 +44,6 @@ v2.0 raw
 	# You can define your own matrix at the end of the file
 
 
-
 ### REFERENCE OF MATRICES ALREADY STORED ###
 
 	# matrix_a: 00 00 03 00		(Answer: 69     = 0x00000045)
@@ -60,16 +58,18 @@ v2.0 raw
 	# 1. Open Y86-CPU.circ in Logisim, and select simpleram.jar
 	# 2. Load this image into the 16MB RAM Module
 	# 3. Select Simulate > Tick Frequency > 4.1 kHz
+	
 	# Controls:
-	# CTRL + T to cycle one tick. Pressing four times (2 clock cycles) corresponds to running one instruction.
+	# CTRL + T to cycle one tick. Pressing four times
+	# (2 clock cycles) corresponds to running one instruction.
+	
 	# CTRL + K to automatically tick. Press again to turn off.
-	
-	
+
+
 ### RESULT OF CALCULATION ###
 
 	# After seeing that the instruction is iCd: 0 and iFn: 0, the result
 	# should be found in %eax on the right (coming out of the Registers module).
-
 
 
 # Rest of main function

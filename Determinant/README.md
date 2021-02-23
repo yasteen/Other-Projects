@@ -1,6 +1,3 @@
-# Assembly Projects
-Repository of assembly projects
-
 ### determinant.ys
 This program was written for a Y86 ISA without mulq (multiplication) and divq (division).
 In place of mulq, a "multiply" function was created. The running time for this multiplication function

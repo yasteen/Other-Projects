@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latex Editor</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="collapse.js"></script>
+</head>
+<body>
+    <h1>Latex Equations</h1>
+    <% equations.forEach(equation => { %>
+        <div class="equation-container">
+            <div class="display-container">
+                <span class="title-container">
+                    <b><%= equation.title %></b>
+                    <div>
+                        <%= equation.modifiedAt.toLocaleDateString() %>
+                    </div>
+                </span>
+                <span class="latex-container">
+                <%- equation.svg %>
+                </span>
+            </div>
+            <div class="edit">Edit</div>
+            <div class="edit-container">
+                <form action='/equations/<%= equation.id %>?_method=PUT' method='POST'>
+                    <input required value='<%= equation.title %>' type='text' name='title' placeholder="Title">
+                    <textarea required name='latex' placeholder="Type LaTeX expression here..."><%= equation.latex %></textarea>
+                    <button type="submit">Save</button>
+                </form>
+                <form action='/equations/<%= equation.id %>?_method=DELETE' method="POST">
+                    <button type="submit">Delete</button>
+                </form>
+            </div>
+        </div>
+    <% }); %>
+        <form action='/equations' method='POST'>
+            <div class="edit"> New Equation </div>
+            <div class='edit-container'>
+                <input required type='text' name='title' placeholder='Title'>
+                <textarea required name='latex' placeholder="Type LaTeX expression here..."></textarea>
+            <button type="submit">Save</button>
+            </div>
+        </form>
+</body>
+</html>

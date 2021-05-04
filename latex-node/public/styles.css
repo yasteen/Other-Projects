@@ -1,0 +1,89 @@
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding-bottom: 250px;
+    
+} body div, body h1 {
+    -webkit-user-select: none;  /* Chrome all / Safari all */
+    -moz-user-select: none;     /* Firefox all */
+    -ms-user-select: none;      /* IE 10+ */
+    user-select: none;          /* Likely future */
+}
+
+.equation-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    min-width: 600px;
+    border: 3px solid black;
+    border-radius: 10px;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.display-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.title-container {
+    float: left;
+    text-align: center;
+    margin-right: 50px;
+}.title-container > b {
+    font-size: 20pt;
+}.title-container > div {
+    color: gray;
+}
+
+
+.latex-container {
+    float: right;
+    font-size: 24px;
+}
+
+.edit {
+    text-align: center;
+    width: 400px;
+    font-size: 20pt;
+    font-family: 'Gill Sans', 'Gill Sans MT', 'Trebuchet MS', sans-serif;
+    background-color: lightgray;
+    border-radius: 10px;
+    padding: 5px;
+    box-sizing: border-box;
+    border: 1px solid black;
+}
+.edit:hover {
+    background-color: #FCD12A;
+}
+
+.edit-container {
+    width: 400px;
+    height: 0;
+    overflow: hidden;
+    transition: height 0.2s ease-out;
+    margin-bottom: 10px;
+}.edit-container * {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin-top: 10px;
+    font-size: 16pt;
+    width: 400px;
+    border-radius: 10px;
+    border-width: 1px;
+    padding: 5px;
+    box-sizing: border-box;
+    outline: 0;
+}.edit-container > form {
+    margin: 0;
+}.edit-container textarea {
+    height: 100px;
+    resize: none;
+}

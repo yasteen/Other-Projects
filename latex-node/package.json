@@ -1,0 +1,24 @@
+{
+  "name": "latex-node",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "devStart": "nodemon -r esm server.js",
+    "start": "node -r esm server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dompurify": "^2.2.8",
+    "dotenv": "^8.2.0",
+    "ejs": "^3.1.6",
+    "esm": "^3.2.25",
+    "express": "^4.17.1",
+    "jsdom": "^16.5.3",
+    "mathjax-full": "^3.1.4",
+    "method-override": "^3.0.0",
+    "mongoose": "^5.12.7"
+  }
+}

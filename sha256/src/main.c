@@ -17,8 +17,6 @@ int main(int argc, char* argv[]) {
         trunc = atoi(argv[2]);
     }
 
-    dump_hex(argv[1], strlen(argv[1]));
-
     int len = strlen(argv[1]) * 8 - trunc;
     if (len <= 0) {
         printf("Too many bits truncated.\n");
@@ -26,7 +24,6 @@ int main(int argc, char* argv[]) {
     }
 
     hash s = sha256(argv[1], len);
-    printf("SHA: ");
 
     for (int i = 0; i < 32; i++) {
         printf("%x", s.val[i] & 0xff);

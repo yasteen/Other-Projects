@@ -4,7 +4,7 @@ CFLAGS=-Wall
 SOURCE_DIR=src
 BUILD_DIR=objs
 
-TARGETS ?= main
+TARGETS ?= sha
 SOURCES := $(shell find $(SOURCE_DIR) -name '*.c')
 
 

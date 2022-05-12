@@ -1,0 +1,6 @@
+GET http://localhost:4000/login
+Content-Type: application/json
+
+{
+    "id": "7212b71b-dd47-43d6-bd98-79fd9537d3d5"
+}

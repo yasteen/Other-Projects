@@ -31,37 +31,35 @@ Graph read_graph_file(char* filename) {
 }
 
 void print_graph(Graph& graph) {
-    std::cout << "Graph V(" << graph.get_num_vertex_weights() << ") ";
+    std::cout << "GRAPH V(" << graph.get_num_vertex_weights() << ") ";
     std::cout << "E(" << graph.get_num_edge_weights() << ")" << std::endl;
     for (unsigned int i = 0; i < graph.size(); i++) {
-        std::cout << i << ":";
         for (auto const& i : graph.get_edges(i)) {
-            std::cout << " " << i;
+            std::cout << i << " ";
         }
         std::cout << std::endl;
     }
+    std::cout << "." << std::endl;
 
-    std::cout << std::endl << "Vertex weights:" << std::endl;
     for (unsigned int i = 0; i < graph.get_num_vertex_weights(); i++) {
-        std::cout << "V[" << i << "]:";
+        std::cout << std::endl << "VERTEX " << i << std::endl;
         for (unsigned int vertex = 0; vertex < graph.size(); vertex++) {
-            std::cout << " " << graph.get_vertex_weight(vertex, i);
+            std::cout << graph.get_vertex_weight(vertex, i) << " ";
         }
-        std::cout << std::endl;
+        std::cout << std::endl << "." << std::endl;
     }
 
-    std::cout << std::endl << "Edge weights:" << std::endl;
     for (unsigned int i = 0; i < graph.get_num_edge_weights(); i++) {
-        std::cout << "E[" << i << "]:" << std::endl;
+        std::cout << std::endl << "EDGE " << i << std::endl;
         for (unsigned int vertex = 0; vertex < graph.size(); vertex++) {
-            std::cout << vertex << ":";
             auto end = graph.get_edge_weights_end(vertex);
             for (auto weight = graph.get_edge_weights_begin(vertex);
                  weight != end; weight++) {
-                std::cout << " " << (*weight)[i];
+                std::cout << (*weight)[i] << " ";
             }
             std::cout << std::endl;
         }
+        std::cout << "." << std::endl;
     }
 }
 
@@ -100,8 +98,10 @@ void process_weights(std::ifstream& file, Graph& graph) {
     while (std::getline(file, line)) {
         if (line.find("VERTEX") != std::string::npos) {
             process_vertex_weights(file, graph, vertex_weight_index);
+            vertex_weight_index++;
         } else if (line.find("EDGE") != std::string::npos) {
             process_edge_weights(file, graph, edge_weight_index);
+            edge_weight_index++;
         }
     }
 }
@@ -109,10 +109,12 @@ void process_weights(std::ifstream& file, Graph& graph) {
 void process_vertex_weights(std::ifstream& file, Graph& graph,
                             int vertex_weight_index) {
     std::string line;
+    std::getline(file, line);
+    std::istringstream iss(line);
+    std::string num;
     int vertex = 0;
-    while (std::getline(file, line)) {
-        if (line == ".") break;
-        graph.set_vertex_weight(vertex, vertex_weight_index, std::stoi(line));
+    while (std::getline(iss, num, ' ')) {
+        graph.set_vertex_weight(vertex, vertex_weight_index, std::stoi(num));
         vertex++;
     }
 }
